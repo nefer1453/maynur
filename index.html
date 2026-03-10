@@ -3,55 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maynur Pro - Kişisel Liste</title>
+    <title>Maynur - Taze ve Hızlı</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .product-btn { transition: all 0.2s; border: 3px solid #cbd5e1; min-height: 90px; font-size: 1.4rem; font-weight: 900; }
-        .selected { background-color: #16a34a !important; color: white !important; border-color: #14532d !important; }
+        .product-btn { transition: all 0.2s; border: 3px solid #fed7aa; min-height: 100px; font-size: 1.5rem; font-weight: 900; }
+        .selected { background-color: #16a34a !important; color: white !important; border-color: #14532d !important; scale: 0.98; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
-        .hidden-item { display: none; }
-        .edit-mode .hide-btn { display: block !important; }
+        body { background-color: #fff7ed; } /* İştah açıcı açık kavun içi/krem */
     </style>
 </head>
-<body class="bg-slate-200 min-h-screen">
+<body class="min-h-screen">
 
-    <header class="bg-blue-800 text-white p-6 shadow-xl sticky top-0 z-50">
+    <header class="bg-orange-500 text-white p-6 shadow-xl sticky top-0 z-50 border-b-4 border-green-600">
         <div class="flex justify-between items-center">
-            <h1 class="text-3xl font-black italic">MAYNUR PRO</h1>
-            <button onclick="toggleEditMode()" class="bg-yellow-400 text-blue-900 px-4 py-2 rounded-xl font-bold text-sm uppercase">⚙️ Düzenle</button>
+            <h1 class="text-3xl font-black italic tracking-tighter">MAYNUR 🛒</h1>
+            <button onclick="toggleEditMode()" class="bg-green-700 text-white px-4 py-2 rounded-2xl font-bold text-xs uppercase border-2 border-white shadow-md">⚙️ AYARLAR</button>
         </div>
-        <div id="progress-text" class="text-xs font-bold mt-2 opacity-80 uppercase tracking-widest text-center border-t border-blue-700 pt-2"></div>
+        <div id="progress-text" class="text-sm font-black mt-2 opacity-100 uppercase text-center bg-white/20 rounded-lg py-1"></div>
     </header>
 
-    <main class="p-4 pb-40">
+    <main class="p-4 pb-48">
         <div id="step-container" class="space-y-4"></div>
     </main>
 
     <div id="quantity-modal" class="modal p-4">
-        <div class="bg-white rounded-[40px] p-8 w-full max-w-md shadow-2xl">
-            <h3 id="modal-title" class="text-3xl font-black text-center mb-8 text-gray-800">Miktar?</h3>
+        <div class="bg-white rounded-[40px] p-8 w-full max-w-md shadow-2xl border-8 border-orange-500">
+            <h3 id="modal-title" class="text-3xl font-black text-center mb-8 text-orange-600 uppercase">MİKTAR SEÇ</h3>
             <div id="quantity-options" class="grid grid-cols-2 gap-4"></div>
-            <button onclick="closeModal()" class="w-full mt-8 py-5 bg-gray-200 font-bold rounded-2xl text-xl">İPTAL</button>
+            <button onclick="closeModal()" class="w-full mt-8 py-5 bg-gray-100 font-black rounded-3xl text-xl text-gray-500">İPTAL</button>
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t-4 border-blue-800 z-50">
-        <button id="main-action-btn" onclick="handleMainAction()" class="w-full bg-blue-700 text-white font-black py-7 rounded-3xl shadow-2xl text-2xl uppercase">
-            SONRAKİ BÖLÜM ➡️
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm border-t-4 border-orange-500 z-50 flex gap-3">
+        <button id="prev-btn" onclick="prevStep()" class="flex-1 bg-gray-200 text-gray-700 font-black py-6 rounded-3xl shadow-lg text-xl uppercase hidden">
+            ⬅️ GERİ
+        </button>
+        <button id="next-btn" onclick="handleMainAction()" class="flex-[2] bg-green-600 text-white font-black py-6 rounded-3xl shadow-xl text-2xl uppercase tracking-tighter">
+            TAMAM ➡️
         </button>
     </div>
 
     <script>
         const initialData = {
-            "🍎 MANAV": { type: "kg", items: ["Domates", "Salatalık", "Biber", "Patates", "Soğan", "Sarımsak", "Patlıcan", "Kabak", "Marul", "Maydanoz", "Limon", "Ispanak", "Mantar", "Elma", "Muz", "Portakal", "Çilek"] },
-            "🥩 KASAP": { type: "kg", items: ["Dana Kıyma", "Dana Kuşbaşı", "Antrikot", "Dana Biftek", "Kuzu Pirzola", "Kuzu Gerdan", "Sucuk", "Sosis", "Salam", "Tavuk Göğsü", "Tavuk Baget", "Bütün Tavuk", "Ciğer"] },
-            "🧀 ŞARKÜTERİ": { type: "kg_adet", items: ["Beyaz Peynir", "Kaşar Peyniri", "Eski Kaşar", "Zeytin (Siyah)", "Zeytin (Yeşil)", "Yumurta", "Tereyağı", "Süt", "Yoğurt", "Kaymak", "Bal", "Pekmez"] },
-            "🧼 TEMİZLİK": { type: "adet", items: ["Deterjan", "Yumuşatıcı", "Bulaşık Tableti", "Bulaşık Deterjanı", "Çamaşır Suyu", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun", "Şampuan"] },
-            "🌾 BAKLİYAT": { type: "kg_adet", items: ["Pirinç", "Kırmızı Mercimek", "Yeşil Mercimek", "Bulgur", "Makarna", "Nohut", "Kuru Fasulye", "Un", "Şeker", "Çay", "Kahve", "Salça"] }
+            "🍎 TAZE MANAV": { type: "kg", items: ["Domates", "Salatalık", "Biber", "Patates", "Soğan", "Sarımsak", "Patlıcan", "Kabak", "Marul", "Maydanoz", "Limon", "Ispanak", "Mantar", "Elma", "Muz", "Portakal", "Çilek", "Erik", "Kavun", "Karpuz"] },
+            "🥩 KASAP & TAVUK": { type: "kg", items: ["Dana Kıyma", "Dana Kuşbaşı", "Antrikot", "Dana Biftek", "Kuzu Pirzola", "Kuzu Gerdan", "Kuzu Kuşbaşı", "Kuzu Ciğer", "Kangal Sucuk", "Salam / Sosis", "Kavurma", "Pastırma", "Tavuk Baget", "Tavuk Kanat", "Tavuk İncik", "Tavuk Kelebek", "Tavuk Göğsü", "Tavuk Bonfile", "Tavuk Pirzola", "Bütün Tavuk", "Köy Tavuğu", "Tavuk Ciğer / Taşlık"] },
+            "🧀 KAHVALTILIK": { type: "kg_adet", items: ["Beyaz Peynir", "Kaşar Peyniri", "Eski Kaşar", "Tulum Peyniri", "Zeytin (Siyah)", "Zeytin (Yeşil)", "Yumurta", "Tereyağı", "Süt", "Yoğurt", "Kaymak", "Bal", "Pekmez", "Tahin", "Çokokrem"] },
+            "🧼 TEMİZLİK": { type: "adet", items: ["Deterjan", "Yumuşatıcı", "Bulaşık Tableti", "Bulaşık Deterjanı", "Çamaşır Suyu", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun", "Şampuan", "Peçete", "Çöp Torbası", "Islak Mendil"] },
+            "🌾 BAKLİYAT & KİLER": { type: "kg_adet", items: ["Pirinç", "Kırmızı Mercimek", "Yeşil Mercimek", "Bulgur", "Makarna", "Nohut", "Kuru Fasulye", "Un", "Şeker", "Çay", "Kahve", "Domates Salçası", "Biber Salçası", "Ayçiçek Yağı", "Zeytinyağı"] }
         };
 
-        let userSettings = JSON.parse(localStorage.getItem('maynur_settings')) || { hiddenItems: [], favItems: [] };
+        let userSettings = JSON.parse(localStorage.getItem('maynur_settings')) || { hiddenItems: [] };
         const categories = Object.keys(initialData);
         let currentStep = 0;
         let selections = {};
@@ -61,49 +63,46 @@
         function toggleEditMode() {
             isEditMode = !isEditMode;
             document.body.classList.toggle('edit-mode');
-            alert(isEditMode ? "DÜZENLEME MODU: İstemediğin ürünün yanındaki (X) butonuna basarak gizleyebilirsin." : "DÜZENLEME KAPATILDI.");
             render();
         }
 
         function hideItem(item) {
             if (!userSettings.hiddenItems.includes(item)) {
                 userSettings.hiddenItems.push(item);
-                localStorage.setItem('maynur_settings', JSON.stringify(userSettings));
-                render();
+            } else {
+                userSettings.hiddenItems = userSettings.hiddenItems.filter(i => i !== item);
             }
+            localStorage.setItem('maynur_settings', JSON.stringify(userSettings));
+            render();
         }
 
         function render() {
             const container = document.getElementById('step-container');
             const catName = categories[currentStep];
             const info = initialData[catName];
+            
             document.getElementById('progress-text').innerText = `${catName} (${currentStep + 1}/${categories.length})`;
+            document.getElementById('prev-btn').style.display = currentStep > 0 ? "block" : "none";
+            document.getElementById('next-btn').innerText = currentStep === categories.length - 1 ? "BİTİR VE GÖNDER ✅" : "SIRADAKİ BÖLÜM ➡️";
 
             container.innerHTML = info.items.map(item => {
-                if (userSettings.hiddenItems.includes(item) && !isEditMode) return '';
+                const isHidden = userSettings.hiddenItems.includes(item);
+                if (isHidden && !isEditMode) return '';
+                
                 return `
                     <div class="relative flex gap-2">
-                        <button onclick="itemClick('${item}')" class="product-btn flex-grow bg-white rounded-3xl shadow-md flex items-center justify-between px-8 ${selections[item] ? 'selected' : ''} ${userSettings.hiddenItems.includes(item) ? 'opacity-30' : ''}">
-                            <span>${item}</span>
-                            <span class="text-sm font-bold">${selections[item] || ''}</span>
+                        <button onclick="itemClick('${item}')" class="product-btn flex-grow bg-white rounded-[32px] shadow-sm flex items-center justify-between px-8 ${selections[item] ? 'selected' : 'text-orange-900'} ${isHidden ? 'opacity-30 grayscale' : ''}">
+                            <span class="leading-tight">${item}</span>
+                            <span class="text-sm font-black bg-orange-100 text-orange-600 px-3 py-1 rounded-full ${selections[item] ? 'bg-white text-green-700' : ''}">${selections[item] || '+'}</span>
                         </button>
-                        ${isEditMode ? `<button onclick="hideItem('${item}')" class="bg-red-500 text-white w-16 rounded-3xl font-black text-2xl">X</button>` : ''}
+                        ${isEditMode ? `<button onclick="hideItem('${item}')" class="bg-red-500 text-white w-20 rounded-[32px] font-black text-2xl shadow-lg">✕</button>` : ''}
                     </div>
                 `;
             }).join('');
-
-            document.getElementById('main-action-btn').innerText = currentStep === categories.length - 1 ? "LİSTEYİ BİTİR 🏁" : "TAMAM, SIRADAKİ ➡️";
         }
 
         function itemClick(item) {
-            if (isEditMode) {
-                if (userSettings.hiddenItems.includes(item)) {
-                    userSettings.hiddenItems = userSettings.hiddenItems.filter(i => i !== item);
-                    localStorage.setItem('maynur_settings', JSON.stringify(userSettings));
-                    render();
-                }
-                return;
-            }
+            if (isEditMode) { hideItem(item); return; }
             if (selections[item]) { delete selections[item]; render(); return; }
             pendingItem = item;
             showModal(item, initialData[categories[currentStep]].type);
@@ -119,7 +118,7 @@
                        (type === "adet") ? ["1 Adet", "2 Adet", "3 Adet", "5 Adet", "12'li", "Koli"] : ["500 gr", "1 kg", "1 Adet", "2 Adet"];
 
             vals.forEach(v => {
-                options.innerHTML += `<button onclick="setQuantity('${v}')" class="py-8 bg-blue-100 text-blue-900 font-black rounded-3xl text-2xl">${v}</button>`;
+                options.innerHTML += `<button onclick="setQuantity('${v}')" class="py-8 bg-orange-50 text-orange-700 font-black rounded-3xl text-2xl border-2 border-orange-200 active:bg-orange-500 active:text-white transition-colors">${v}</button>`;
             });
             modal.classList.add('active');
         }
@@ -132,12 +131,14 @@
             else finish();
         };
 
+        window.prevStep = () => { if (currentStep > 0) { currentStep--; window.scrollTo(0,0); render(); } };
+
         async function finish() {
             const list = Object.entries(selections).map(([k, v]) => `${k} (${v})`).join("\n- ");
-            if (!list) return alert("Liste boş!");
+            if (!list) return alert("Liste boş, seçim yapmadın knk!");
             const msg = `🏠 MAYNUR EV LİSTESİ\n--------------------\n- ${list}`;
             if (navigator.share) await navigator.share({ text: msg });
-            else { navigator.clipboard.writeText(msg); alert("Kopyalandı!"); }
+            else { navigator.clipboard.writeText(msg); alert("Kopyalandı, WhatsApp'a yapıştırabilirsin!"); }
         }
 
         render();
