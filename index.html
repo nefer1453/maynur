@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maynur - Ev İhtiyaç Listesi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .category-card { transition: transform 0.2s; border: 2px solid transparent; }
+        .category-card:active { transform: scale(0.95); border-color: #25d366; }
+        .selected { background-color: #dcf8c6; border-color: #25d366; }
+    </style>
+</head>
+<body class="bg-gray-100 pb-24">
+    <header class="bg-green-600 text-white p-4 text-center shadow-lg">
+        <h1 class="text-2xl font-bold">🏠 MAYNUR</h1>
+        <p class="text-sm">Lazım olanın üstüne tıkla, Selçuk'a gönder!</p>
+    </header>
+
+    <div id="app" class="p-4 grid grid-cols-2 gap-4">
+        </div>
+
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white shadow-2xl border-t">
+        <button onclick="sendToWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg text-lg">
+            <span>🚀 Listeyi WhatsApp'la Gönder</span>
+        </button>
+    </div>
+
+    <script>
+        const data = {
+            "🍎 Manav": ["Domates", "Salatalık", "Patates", "Soğan", "Meyve", "Yeşillik"],
+            "🧀 Şarküteri": ["Peynir", "Zeytin", "Yumurta", "Tereyağı", "Süt", "Yoğurt"],
+            "🧼 Temizlik": ["Deterjan", "Bulaşık Tableti", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun"],
+            "🥩 Kasap": ["Kıyma", "Kuşbaşı", "Tavuk", "Sucuk"],
+            "🍞 Ekmek/Unlu": ["Ekmek", "Simit", "Yufka", "Lavaş"],
+            "🌾 Bakliyat": ["Pirinç", "Mercimek", "Bulgur", "Makarna"],
+            "🌻 Yağ": ["Ayçiçek Yağı", "Zeytinyağı"]
+        };
+
+        let selectedItems = new Set();
+
+        const app = document.getElementById('app');
+        for (const [cat, items] of Object.entries(data)) {
+            const section = document.createElement('div');
+            section.className = "col-span-2 mt-4 font-bold text-gray-700 border-b pb-1";
+            section.innerText = cat;
+            app.appendChild(section);
+
+            items.forEach(item => {
+                const btn = document.createElement('div');
+                btn.className = "category-card bg-white p-4 rounded-lg shadow-sm text-center cursor-pointer text-sm font-medium";
+                btn.innerText = item;
+                btn.onclick = () => {
+                    if(selectedItems.has(item)) {
+                        selectedItems.delete(item);
+                        btn.classList.remove('selected');
+                    } else {
+                        selectedItems.add(item);
+                        btn.classList.add('selected');
+                    }
+                };
+                app.appendChild(btn);
+            });
+        }
+
+        function sendToWhatsApp() {
+            if(selectedItems.size === 0) return alert("Önce bişeyler seç la :)");
+            const list = Array.from(selectedItems).join("%0A- ");
+            const message = `🏠 *MAYNUR EV LİSTESİ*%0A--------------------%0A- ${list}`;
+            window.location.href = `https://wa.me/905XXXXXXXXX?text=${message}`;
+        }
+    </script>
+</body>
+</html>
