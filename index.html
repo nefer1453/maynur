@@ -3,72 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maynur - Ev İhtiyaç Listesi</title>
+    <title>Maynur - Adım Adım Liste</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .category-card { transition: transform 0.2s; border: 2px solid transparent; }
-        .category-card:active { transform: scale(0.95); border-color: #25d366; }
-        .selected { background-color: #dcf8c6; border-color: #25d366; }
+        .product-btn { transition: all 0.2s; border: 2px solid #e5e7eb; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .selected { background-color: #3b82f6 !important; color: white !important; border-color: #2563eb !important; transform: scale(0.95); }
+        .step-content { display: none; animation: fadeIn 0.4s; }
+        .active-step { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-gray-100 pb-24">
-    <header class="bg-green-600 text-white p-4 text-center shadow-lg">
-        <h1 class="text-2xl font-bold">🏠 MAYNUR</h1>
-        <p class="text-sm">Lazım olanın üstüne tıkla, Selçuk'a gönder!</p>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <header class="bg-blue-600 text-white p-4 text-center shadow-md">
+        <h1 class="text-xl font-black italic">MAYNUR 🛒</h1>
+        <div id="progress-bar" class="w-full bg-blue-800 h-1 mt-3 rounded-full overflow-hidden">
+            <div id="progress-fill" class="bg-yellow-400 h-full transition-all duration-500" style="width: 10%"></div>
+        </div>
     </header>
 
-    <div id="app" class="p-4 grid grid-cols-2 gap-4">
-        </div>
-
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white shadow-2xl border-t">
-        <button onclick="sendToWhatsApp()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg text-lg">
-            <span>🚀 Listeyi WhatsApp'la Gönder</span>
-        </button>
-    </div>
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div id="step-container" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 min-h-[400px] flex flex-col justify-between">
+            </div>
+    </main>
 
     <script>
         const data = {
-            "🍎 Manav": ["Domates", "Salatalık", "Patates", "Soğan", "Meyve", "Yeşillik"],
-            "🧀 Şarküteri": ["Peynir", "Zeytin", "Yumurta", "Tereyağı", "Süt", "Yoğurt"],
-            "🧼 Temizlik": ["Deterjan", "Bulaşık Tableti", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun"],
-            "🥩 Kasap": ["Kıyma", "Kuşbaşı", "Tavuk", "Sucuk"],
-            "🍞 Ekmek/Unlu": ["Ekmek", "Simit", "Yufka", "Lavaş"],
-            "🌾 Bakliyat": ["Pirinç", "Mercimek", "Bulgur", "Makarna"],
-            "🌻 Yağ": ["Ayçiçek Yağı", "Zeytinyağı"]
+            "🍎 Manav": ["Domates", "Salatalık", "Biber", "Patates", "Soğan", "Sarımsak", "Patlıcan", "Kabak", "Marul", "Maydanoz", "Taze Fasulye", "Havuç", "Limon", "Ispanak", "Mantar", "Elma", "Muz", "Portakal", "Mevsim Meyvesi"],
+            "🧀 Şarküteri": ["Beyaz Peynir", "Kaşar Peyniri", "Zeytin (Siyah)", "Zeytin (Yeşil)", "Yumurta", "Tereyağı", "Süt", "Yoğurt", "Kaymak", "Bal", "Pekmez", "Tahin", "Salam", "Sosis", "Pastırma", "Labne"],
+            "🥩 Kasap": ["Dana Kıyma", "Dana Kuşbaşı", "Tavuk Göğsü", "Tavuk Baget", "Bütün Tavuk", "Sucuk", "Antrikot"],
+            "🧼 Temizlik": ["Deterjan", "Yumuşatıcı", "Bulaşık Tableti", "Bulaşık Deterjanı", "Çamaşır Suyu", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun", "Şampuan", "Diş Macunu", "Yüzey Temizleyici", "Peçete", "Çöp Torbası"],
+            "🍞 Ekmek/Unlu": ["Ekmek", "Tam Buğday Ekmek", "Simit", "Yufka", "Lavaş", "Galeta", "Milföy Hamuru"],
+            "🌾 Bakliyat/Kiler": ["Pirinç", "Kırmızı Mercimek", "Yeşil Mercimek", "Pilavlık Bulgur", "Köftelik Bulgur", "Makarna", "Nohut", "Kuru Fasulye", "Un", "Şeker", "Tuz", "Çay", "Kahve", "Salça", "Baharatlar"],
+            "🌻 Yağlar": ["Ayçiçek Yağı", "Zeytinyağı (Sızma)", "Zeytinyağı (Riviera)", "Mısır Özü Yağı", "Margarin"],
+            "🥨 Atıştırmalık": ["Cips", "Bisküvi", "Çikolata", "Kuruyemiş", "Kraker", "Meyve Suyu", "Kola", "Gazoz", "Soda", "Su"]
         };
 
+        const categories = Object.keys(data);
+        let currentStep = 0;
         let selectedItems = new Set();
 
-        const app = document.getElementById('app');
-        for (const [cat, items] of Object.entries(data)) {
-            const section = document.createElement('div');
-            section.className = "col-span-2 mt-4 font-bold text-gray-700 border-b pb-1";
-            section.innerText = cat;
-            app.appendChild(section);
+        function renderStep() {
+            const container = document.getElementById('step-container');
+            const catName = categories[currentStep];
+            const products = data[catName];
+            const progress = ((currentStep + 1) / categories.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + "%";
 
-            items.forEach(item => {
-                const btn = document.createElement('div');
-                btn.className = "category-card bg-white p-4 rounded-lg shadow-sm text-center cursor-pointer text-sm font-medium";
-                btn.innerText = item;
-                btn.onclick = () => {
-                    if(selectedItems.has(item)) {
-                        selectedItems.delete(item);
-                        btn.classList.remove('selected');
-                    } else {
-                        selectedItems.add(item);
-                        btn.classList.add('selected');
-                    }
-                };
-                app.appendChild(btn);
-            });
+            let html = `
+                <div class="step-content active-step">
+                    <h2 class="text-2xl font-bold text-gray-800 text-center mb-1">${catName}</h2>
+                    <p class="text-gray-400 text-center text-sm mb-6">İhtiyacın olanlara dokun</p>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-8 max-h-[350px] overflow-y-auto pr-1">
+                        ${products.map(p => `
+                            <button onclick="toggleProduct('${p}', this)" class="product-btn p-3 rounded-2xl bg-gray-50 text-sm font-semibold text-gray-700 ${selectedItems.has(p) ? 'selected' : ''}">
+                                ${p}
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex gap-3">
+                        ${currentStep > 0 ? `<button onclick="prevStep()" class="flex-1 py-4 bg-gray-200 text-gray-700 font-bold rounded-2xl">Geri</button>` : ''}
+                        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-200">
+                            ${currentStep === categories.length - 1 ? 'LİSTEYİ BİTİR 🏁' : 'TAMAM, SONRAKİ ➡️'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
         }
 
-        function sendToWhatsApp() {
-            if(selectedItems.size === 0) return alert("Önce bişeyler seç la :)");
-            const list = Array.from(selectedItems).join("%0A- ");
-            const message = `🏠 *MAYNUR EV LİSTESİ*%0A--------------------%0A- ${list}`;
-            window.location.href = `https://wa.me/905XXXXXXXXX?text=${message}`;
+        window.toggleProduct = (p, el) => {
+            if(selectedItems.has(p)) {
+                selectedItems.delete(p);
+                el.classList.remove('selected');
+            } else {
+                selectedItems.add(p);
+                el.classList.add('selected');
+            }
+        };
+
+        window.nextStep = () => {
+            if (currentStep < categories.length - 1) {
+                currentStep++;
+                renderStep();
+            } else {
+                finishList();
+            }
+        };
+
+        window.prevStep = () => {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+            }
+        };
+
+        async function finishList() {
+            if(selectedItems.size === 0) return alert("Hiçbir şey seçmedin ki knk :)");
+            
+            const listText = Array.from(selectedItems).join("\n- ");
+            const fullMessage = `🏠 MAYNUR EV LİSTESİ\n--------------------\n- ${listText}`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: 'Maynur Liste', text: fullMessage });
+                } catch (err) { console.log('İptal'); }
+            } else {
+                navigator.clipboard.writeText(fullMessage);
+                alert("Liste kopyalandı, istediğin yere yapıştır!");
+            }
         }
+
+        renderStep();
     </script>
 </body>
 </html>
