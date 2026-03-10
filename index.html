@@ -3,120 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maynur - Adım Adım Liste</title>
+    <title>Maynur - Büyük ve Kolay</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .product-btn { transition: all 0.2s; border: 2px solid #e5e7eb; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .selected { background-color: #3b82f6 !important; color: white !important; border-color: #2563eb !important; transform: scale(0.95); }
-        .step-content { display: none; animation: fadeIn 0.4s; }
-        .active-step { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Büyük ve net butonlar için özel stil */
+        .product-btn { transition: all 0.2s; border: 3px solid #cbd5e1; user-select: none; -webkit-tap-highlight-color: transparent; min-height: 80px; font-size: 1.25rem; }
+        .selected { background-color: #16a34a !important; color: white !important; border-color: #14532d !important; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col">
+<body class="bg-slate-100 min-h-screen">
 
-    <header class="bg-blue-600 text-white p-4 text-center shadow-md">
-        <h1 class="text-xl font-black italic">MAYNUR 🛒</h1>
-        <div id="progress-bar" class="w-full bg-blue-800 h-1 mt-3 rounded-full overflow-hidden">
-            <div id="progress-fill" class="bg-yellow-400 h-full transition-all duration-500" style="width: 10%"></div>
-        </div>
+    <header class="bg-green-700 text-white p-6 text-center shadow-lg sticky top-0 z-50">
+        <h1 class="text-3xl font-black tracking-widest uppercase">MAYNUR 🛒</h1>
+        <div id="progress-text" class="text-sm font-bold mt-2 opacity-80 uppercase tracking-tighter"></div>
     </header>
 
-    <main class="flex-grow flex items-center justify-center p-4">
-        <div id="step-container" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 min-h-[400px] flex flex-col justify-between">
+    <main class="p-4 pb-32">
+        <div id="step-container" class="space-y-4">
             </div>
     </main>
 
+    <div id="quantity-modal" class="modal p-4">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+            <h3 id="modal-title" class="text-2xl font-bold text-center mb-6 text-gray-800">Miktar Seçin</h3>
+            <div id="quantity-options" class="grid grid-cols-2 gap-4">
+                </div>
+            <button onclick="closeModal()" class="w-full mt-8 py-4 bg-gray-200 font-bold rounded-2xl text-xl">İptal</button>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t-4 border-green-700 z-50">
+        <button id="main-action-btn" onclick="handleMainAction()" class="w-full bg-green-600 text-white font-black py-6 rounded-2xl shadow-xl text-2xl uppercase tracking-wider">
+            Sonraki Bölüm ➡️
+        </button>
+    </div>
+
     <script>
         const data = {
-            "🍎 Manav": ["Domates", "Salatalık", "Biber", "Patates", "Soğan", "Sarımsak", "Patlıcan", "Kabak", "Marul", "Maydanoz", "Taze Fasulye", "Havuç", "Limon", "Ispanak", "Mantar", "Elma", "Muz", "Portakal", "Mevsim Meyvesi"],
-            "🧀 Şarküteri": ["Beyaz Peynir", "Kaşar Peyniri", "Zeytin (Siyah)", "Zeytin (Yeşil)", "Yumurta", "Tereyağı", "Süt", "Yoğurt", "Kaymak", "Bal", "Pekmez", "Tahin", "Salam", "Sosis", "Pastırma", "Labne"],
-            "🥩 Kasap": ["Dana Kıyma", "Dana Kuşbaşı", "Tavuk Göğsü", "Tavuk Baget", "Bütün Tavuk", "Sucuk", "Antrikot"],
-            "🧼 Temizlik": ["Deterjan", "Yumuşatıcı", "Bulaşık Tableti", "Bulaşık Deterjanı", "Çamaşır Suyu", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun", "Şampuan", "Diş Macunu", "Yüzey Temizleyici", "Peçete", "Çöp Torbası"],
-            "🍞 Ekmek/Unlu": ["Ekmek", "Tam Buğday Ekmek", "Simit", "Yufka", "Lavaş", "Galeta", "Milföy Hamuru"],
-            "🌾 Bakliyat/Kiler": ["Pirinç", "Kırmızı Mercimek", "Yeşil Mercimek", "Pilavlık Bulgur", "Köftelik Bulgur", "Makarna", "Nohut", "Kuru Fasulye", "Un", "Şeker", "Tuz", "Çay", "Kahve", "Salça", "Baharatlar"],
-            "🌻 Yağlar": ["Ayçiçek Yağı", "Zeytinyağı (Sızma)", "Zeytinyağı (Riviera)", "Mısır Özü Yağı", "Margarin"],
-            "🥨 Atıştırmalık": ["Cips", "Bisküvi", "Çikolata", "Kuruyemiş", "Kraker", "Meyve Suyu", "Kola", "Gazoz", "Soda", "Su"]
+            "🍎 MANAV": {
+                items: ["Domates", "Salatalık", "Biber", "Patates", "Soğan", "Sarımsak", "Patlıcan", "Kabak", "Marul", "Maydanoz", "Taze Fasulye", "Limon", "Ispanak", "Mantar", "Elma", "Muz", "Portakal", "Çilek", "Karpuz"],
+                type: "kg"
+            },
+            "🥩 KASAP": {
+                items: ["Dana Kıyma", "Dana Kuşbaşı", "Antrikot", "Dana Biftek", "Kuzu Pirzola", "Kuzu Gerdan", "Kuzu Kuşbaşı", "Sucuk (Kangal)", "Sosis", "Salam", "Pastırma", "Tavuk Göğsü", "Tavuk Baget", "Tavuk Kanat", "Bütün Tavuk", "Köy Tavuğu", "Ciğer", "İşkembe", "Kavurma"],
+                type: "kg"
+            },
+            "🧀 ŞARKÜTERİ": {
+                items: ["Beyaz Peynir", "Kaşar Peyniri", "Eski Kaşar", "Tulum Peyniri", "Zeytin (Siyah)", "Zeytin (Yeşil)", "Yumurta", "Tereyağı", "Süt", "Yoğurt", "Kaymak", "Bal", "Pekmez", "Tahin"],
+                type: "kg_adet"
+            },
+            "🧼 TEMİZLİK": {
+                items: ["Deterjan", "Yumuşatıcı", "Bulaşık Tableti", "Bulaşık Deterjanı", "Çamaşır Suyu", "Kağıt Havlu", "Tuvalet Kağıdı", "Sabun", "Şampuan", "Peçete", "Çöp Torbası"],
+                type: "adet"
+            },
+            "🍞 EKMEK/UNLU": {
+                items: ["Ekmek", "Tam Buğday Ekmek", "Simit", "Yufka", "Lavaş", "Milföy", "Pasta Kek"],
+                type: "adet"
+            },
+            "🌾 BAKLİYAT": {
+                items: ["Pirinç", "Kırmızı Mercimek", "Yeşil Mercimek", "Pilavlık Bulgur", "Makarna", "Nohut", "Kuru Fasulye", "Un", "Şeker", "Çay", "Kahve", "Salça"],
+                type: "kg_adet"
+            }
         };
 
         const categories = Object.keys(data);
         let currentStep = 0;
-        let selectedItems = new Set();
+        let selections = {}; // { "Domates": "2 kg" }
+        let pendingItem = null;
 
-        function renderStep() {
+        function render() {
             const container = document.getElementById('step-container');
             const catName = categories[currentStep];
-            const products = data[catName];
-            const progress = ((currentStep + 1) / categories.length) * 100;
-            document.getElementById('progress-fill').style.width = progress + "%";
+            const info = data[catName];
+            
+            document.getElementById('progress-text').innerText = `BÖLÜM ${currentStep + 1} / ${categories.length}: ${catName}`;
+            
+            container.innerHTML = `<div class="grid grid-cols-1 gap-4">
+                ${info.items.map(item => `
+                    <button onclick="itemClick('${item}')" class="product-btn bg-white rounded-2xl font-black flex items-center justify-between px-6 ${selections[item] ? 'selected' : ''}">
+                        <span>${item}</span>
+                        <span class="text-sm opacity-80">${selections[item] || '+'}</span>
+                    </button>
+                `).join('')}
+            </div>`;
 
-            let html = `
-                <div class="step-content active-step">
-                    <h2 class="text-2xl font-bold text-gray-800 text-center mb-1">${catName}</h2>
-                    <p class="text-gray-400 text-center text-sm mb-6">İhtiyacın olanlara dokun</p>
-                    
-                    <div class="grid grid-cols-2 gap-3 mb-8 max-h-[350px] overflow-y-auto pr-1">
-                        ${products.map(p => `
-                            <button onclick="toggleProduct('${p}', this)" class="product-btn p-3 rounded-2xl bg-gray-50 text-sm font-semibold text-gray-700 ${selectedItems.has(p) ? 'selected' : ''}">
-                                ${p}
-                            </button>
-                        `).join('')}
-                    </div>
-
-                    <div class="flex gap-3">
-                        ${currentStep > 0 ? `<button onclick="prevStep()" class="flex-1 py-4 bg-gray-200 text-gray-700 font-bold rounded-2xl">Geri</button>` : ''}
-                        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-200">
-                            ${currentStep === categories.length - 1 ? 'LİSTEYİ BİTİR 🏁' : 'TAMAM, SONRAKİ ➡️'}
-                        </button>
-                    </div>
-                </div>
-            `;
-            container.innerHTML = html;
+            const btn = document.getElementById('main-action-btn');
+            btn.innerText = currentStep === categories.length - 1 ? "LİSTEYİ BİTİR VE GÖNDER ✅" : "SONRAKİ BÖLÜM ➡️";
         }
 
-        window.toggleProduct = (p, el) => {
-            if(selectedItems.has(p)) {
-                selectedItems.delete(p);
-                el.classList.remove('selected');
-            } else {
-                selectedItems.add(p);
-                el.classList.add('selected');
+        function itemClick(item) {
+            if (selections[item]) {
+                delete selections[item];
+                render();
+                return;
             }
+            pendingItem = item;
+            const catType = data[categories[currentStep]].type;
+            showModal(item, catType);
+        }
+
+        function showModal(item, type) {
+            const modal = document.getElementById('quantity-modal');
+            const options = document.getElementById('quantity-options');
+            document.getElementById('modal-title').innerText = item;
+            options.innerHTML = '';
+            
+            let values = [];
+            if (type === "kg") values = ["250 gr", "500 gr", "1 kg", "2 kg", "3 kg", "5 kg"];
+            else if (type === "adet") values = ["1 Adet", "2 Adet", "3 Adet", "5 Adet", "10 Adet", "Koli"];
+            else values = ["500 gr", "1 kg", "1 Adet", "2 Adet"];
+
+            values.forEach(v => {
+                options.innerHTML += `<button onclick="setQuantity('${v}')" class="py-6 bg-blue-100 text-blue-800 font-bold rounded-xl text-xl">${v}</button>`;
+            });
+            modal.classList.add('active');
+        }
+
+        window.setQuantity = (val) => {
+            selections[pendingItem] = val;
+            closeModal();
+            render();
         };
 
-        window.nextStep = () => {
+        window.closeModal = () => {
+            document.getElementById('quantity-modal').classList.remove('active');
+        };
+
+        window.handleMainAction = () => {
             if (currentStep < categories.length - 1) {
                 currentStep++;
-                renderStep();
+                window.scrollTo(0,0);
+                render();
             } else {
-                finishList();
+                finish();
             }
         };
 
-        window.prevStep = () => {
-            if (currentStep > 0) {
-                currentStep--;
-                renderStep();
-            }
-        };
-
-        async function finishList() {
-            if(selectedItems.size === 0) return alert("Hiçbir şey seçmedin ki knk :)");
-            
-            const listText = Array.from(selectedItems).join("\n- ");
-            const fullMessage = `🏠 MAYNUR EV LİSTESİ\n--------------------\n- ${listText}`;
-
-            if (navigator.share) {
-                try {
-                    await navigator.share({ title: 'Maynur Liste', text: fullMessage });
-                } catch (err) { console.log('İptal'); }
-            } else {
-                navigator.clipboard.writeText(fullMessage);
-                alert("Liste kopyalandı, istediğin yere yapıştır!");
-            }
+        async function finish() {
+            const list = Object.entries(selections).map(([k, v]) => `${k} (${v})`).join("\n- ");
+            if (!list) return alert("Hicbir sey secilmedi!");
+            const msg = `🏠 MAYNUR EV LİSTESİ\n--------------------\n- ${list}`;
+            if (navigator.share) await navigator.share({ text: msg });
+            else alert("Liste kopyalandı!");
         }
 
-        renderStep();
+        render();
     </script>
 </body>
 </html>
